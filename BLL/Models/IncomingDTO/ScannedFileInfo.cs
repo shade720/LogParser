@@ -8,7 +8,7 @@ public class ScannedFileInfo
     public string FileName { get; set; }
 
     [JsonPropertyName("result")]
-    public bool IsContainErrors { get; set; }
+    public bool HasNoErrors { get; set; }
 
     [JsonPropertyName("errors")]
     public List<ErrorInfo> Errors { get; set; }
