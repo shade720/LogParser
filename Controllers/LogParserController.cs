@@ -71,4 +71,27 @@ public class LogParserController : ControllerBase
             return Results.BadRequest(e.Message);
         }
     }
+
+    // "api/query/check" GET
+    [HttpGet("query/check")]
+    public QueriesInfo GetQueryCheck([FromBody] ScanData scanData)
+    {
+        var queriesGroupedByScanResult = scanData.Files
+            .Where(file => file.FileName.ToLower().StartsWith("query_"))
+            .GroupBy(file => file.HasNoErrors)
+            .ToDictionary(g => g.Key, g => g.ToList());
+
+        if (!queriesGroupedByScanResult.ContainsKey(false))
+            queriesGroupedByScanResult[false] = new List<ScannedFileInfo>();
+        if (!queriesGroupedByScanResult.ContainsKey(true))
+            queriesGroupedByScanResult[true] = new List<ScannedFileInfo>();
+
+        return new QueriesInfo
+        {
+            TotalQueries = queriesGroupedByScanResult[true].Count + queriesGroupedByScanResult[false].Count,
+            CorrectQueries = queriesGroupedByScanResult[true].Count,
+            ErrorQueries = queriesGroupedByScanResult[false].Count,
+            ErrorFiles = queriesGroupedByScanResult[false].Select(x => x.FileName)
+        };
+    }
 }
