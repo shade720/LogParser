@@ -79,8 +79,8 @@ public class LogParserController : ControllerBase
     public QueriesInfo GetQueryCheck([FromBody] ScanData scanData)
     {
         var queriesGroupedByScanResult = scanData.Files
-            .Where(file => file.FileName.ToLower().StartsWith("query_"))
-            .GroupBy(file => file.HasNoErrors)
+            .Where(f => f.FileName.ToLower().StartsWith("query_"))
+            .GroupBy(f => f.HasNoErrors)
             .ToDictionary(g => g.Key, g => g.ToList());
 
         if (!queriesGroupedByScanResult.ContainsKey(false))
@@ -108,7 +108,7 @@ public class LogParserController : ControllerBase
             {
                 scanDataJson = await reader.ReadToEndAsync();
             }
-            var outValue = JsonSerializer.Deserialize<ScanData>(scanDataJson);
+            JsonSerializer.Deserialize<ScanData>(scanDataJson);
         }
         catch
         {
@@ -124,5 +124,12 @@ public class LogParserController : ControllerBase
             return Results.Problem("File was not saved", statusCode: 500);
         }
         return Results.Ok("Scan result successfully saved on disk!");
+    }
+
+    // "api/service/serviceInfo" GET
+    [HttpGet("service/serviceInfo")]
+    public ServiceInfo GetServiceInfo()
+    {
+        return new ServiceInfo();
     }
 }
