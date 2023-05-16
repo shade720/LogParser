@@ -1,15 +1,16 @@
-﻿using Microsoft.AspNetCore.Mvc;
+﻿using LogParser.BLL.Models;
+using Microsoft.AspNetCore.Mvc;
 
 namespace LogParser.Controllers;
 
-[Route("api/[controller]")]
+[Route("[controller]/api")]
 [ApiController]
 public class LogParserController : ControllerBase
 {
-    // GET: api/<LogParserController>
-    [HttpGet]
-    public IEnumerable<string> Get()
+    // "api/allData" GET
+    [HttpGet ("allData")]
+    public LogData Get([FromBody] LogData logData)
     {
-        return new[] { "value1", "value2" };
+        return logData;
     }
 }

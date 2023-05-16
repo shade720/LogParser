@@ -8,7 +8,7 @@ public class ScanInfo
     public DateTime ScanTime { get; set; }
 
     [JsonPropertyName("db")]
-    public string Db { get; set; }
+    public string Database { get; set; }
 
     [JsonPropertyName("server")]
     public string Server { get; set; }
