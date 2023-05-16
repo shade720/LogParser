@@ -1,26 +1,16 @@
-﻿using System.Text;
-using System.Text.Json;
-using LogParser.BLL;
+﻿using LogParser.BLL;
 using LogParser.BLL.Models.IncomingDTO;
 using LogParser.BLL.Models.OutgoingDTO;
 using Microsoft.AspNetCore.Mvc;
 
 namespace LogParser.Controllers;
 
-[Route("[controller]/api")]
+[Route("api")]
 [ApiController]
 public class LogParserController : ControllerBase
 {
     private readonly LogFilter _logFilter;
-    private readonly LogSaver _logSaver;
-    private readonly ServiceInfoProvider _serviceInfoProvider;
-
-    public LogParserController(LogFilter logFilter, LogSaver logSaver, ServiceInfoProvider serviceInfoProvider)
-    {
-        _logFilter = logFilter;
-        _logSaver = logSaver;
-        _serviceInfoProvider = serviceInfoProvider;
-    }
+    public LogParserController(LogFilter logFilter) => _logFilter = logFilter;
 
     // "api/allData" GET
     [HttpGet ("allData")]
@@ -77,33 +67,5 @@ public class LogParserController : ControllerBase
     public QueriesInfo GetQueryCheck([FromBody] ScanLog scanLog)
     {
         return _logFilter.FilterQueries(scanLog);
-    }
-
-    // "api/newErrors" POST
-    [HttpPost("newErrors")]
-    public async Task<IResult> PostNewErrors()
-    {
-        try
-        {
-            using var reader = new StreamReader(Request.Body, Encoding.UTF8);
-            var scanDataJson = await reader.ReadToEndAsync();
-            await _logSaver.SaveScanLogJson(scanDataJson);
-        }
-        catch (JsonException exception)
-        {
-            return Results.BadRequest(exception.Message);
-        }
-        catch (Exception exception)
-        {
-            return Results.Problem(exception.Message, statusCode: 500);
-        }
-        return Results.Ok("Scan result successfully saved on disk!");
-    }
-
-    // "api/service/serviceInfo" GET
-    [HttpGet("service/serviceInfo")]
-    public ServiceInfo GetServiceInfo()
-    {
-        return _serviceInfoProvider.CurrentServiceInfo;
     }
 }
