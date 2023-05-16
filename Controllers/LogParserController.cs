@@ -9,8 +9,15 @@ public class LogParserController : ControllerBase
 {
     // "api/allData" GET
     [HttpGet ("allData")]
-    public LogData Get([FromBody] LogData logData)
+    public LogData GetAllData([FromBody] LogData logData)
     {
         return logData;
+    }
+
+    // "api/scan" GET
+    [HttpGet("scan")]
+    public ScanInfo GetScanInfo([FromBody] LogData logData)
+    {
+        return logData.ScanInfo;
     }
 }
