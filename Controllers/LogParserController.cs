@@ -43,4 +43,11 @@ public class LogParserController : ControllerBase
                 ErrorDescriptions = file.Errors.Select(err => err.ErrorText)
             });
     }
+
+    // "api/errors/count" GET
+    [HttpGet("errors/count")]
+    public int GetErrorsCount([FromBody] ScanData scanData)
+    {
+        return scanData.ScanInfo.ErrorCount;
+    }
 }
