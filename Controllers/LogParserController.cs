@@ -1,4 +1,4 @@
-﻿using LogParser.BLL.Models;
+﻿using LogParser.BLL.Models.IncomingDTO;
 using Microsoft.AspNetCore.Mvc;
 
 namespace LogParser.Controllers;
@@ -9,15 +9,24 @@ public class LogParserController : ControllerBase
 {
     // "api/allData" GET
     [HttpGet ("allData")]
-    public LogData GetAllData([FromBody] LogData logData)
+    public ScanData GetAllData([FromBody] ScanData scanData)
     {
-        return logData;
+        return scanData;
     }
 
     // "api/scan" GET
     [HttpGet("scan")]
-    public ScanInfo GetScanInfo([FromBody] LogData logData)
+    public ScanInfo GetScanInfo([FromBody] ScanData scanData)
     {
-        return logData.ScanInfo;
+        return scanData.ScanInfo;
+    }
+
+    // "api/filenames?correct={value}" GET
+    [HttpGet("filenames")]
+    public IEnumerable<ScannedFileInfo> GetScanInfo(
+        [FromQuery (Name = "correct")] bool isCorrect, 
+        [FromBody] ScanData scanData)
+    {
+        return scanData.Files.Where(file => file.IsContainErrors == isCorrect);
     }
 }

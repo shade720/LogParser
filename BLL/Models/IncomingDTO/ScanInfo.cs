@@ -1,6 +1,6 @@
 ﻿using System.Text.Json.Serialization;
 
-namespace LogParser.BLL.Models;
+namespace LogParser.BLL.Models.IncomingDTO;
 
 public class ScanInfo
 {

@@ -1,14 +1,14 @@
 ﻿using System.Text.Json.Serialization;
 
-namespace LogParser.BLL.Models;
+namespace LogParser.BLL.Models.IncomingDTO;
 
-public class FileInfo
+public class ScannedFileInfo
 {
     [JsonPropertyName("filename")]
     public string FileName { get; set; }
 
     [JsonPropertyName("result")]
-    public bool ScanResult { get; set; }
+    public bool IsContainErrors { get; set; }
 
     [JsonPropertyName("errors")]
     public List<ErrorInfo> Errors { get; set; }

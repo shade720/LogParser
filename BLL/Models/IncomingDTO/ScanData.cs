@@ -1,12 +1,12 @@
 ﻿using System.Text.Json.Serialization;
 
-namespace LogParser.BLL.Models;
+namespace LogParser.BLL.Models.IncomingDTO;
 
-public class LogData
+public class ScanData
 {
     [JsonPropertyName("scan")]
     public ScanInfo ScanInfo { get; set; }
 
     [JsonPropertyName("files")]
-    public List<FileInfo> Files { get; set; }
+    public List<ScannedFileInfo> Files { get; set; }
 }
