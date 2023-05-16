@@ -1,4 +1,6 @@
-﻿using LogParser.BLL.Models.IncomingDTO;
+﻿using System.Text;
+using System.Text.Json;
+using LogParser.BLL.Models.IncomingDTO;
 using LogParser.BLL.Models.OutgoingDTO;
 using Microsoft.AspNetCore.Mvc;
 
@@ -93,5 +95,34 @@ public class LogParserController : ControllerBase
             ErrorQueries = queriesGroupedByScanResult[false].Count,
             ErrorFiles = queriesGroupedByScanResult[false].Select(x => x.FileName)
         };
+    }
+
+    // "api/newErrors" POST
+    [HttpPost("newErrors")]
+    public async Task<IResult> PostNewErrors()
+    {
+        string scanDataJson;
+        try
+        {
+            using (var reader = new StreamReader(Request.Body, Encoding.UTF8))
+            {
+                scanDataJson = await reader.ReadToEndAsync();
+            }
+            var outValue = JsonSerializer.Deserialize<ScanData>(scanDataJson);
+        }
+        catch
+        {
+            return Results.BadRequest("The JSON value could not be converted");
+        }
+        try
+        {
+            var saveFileName = Path.ChangeExtension(DateTime.Now.ToString("dd-MM-yyyy_hh-mm-ss"), ".json");
+            await System.IO.File.WriteAllTextAsync(saveFileName, JsonSerializer.Serialize(scanDataJson));
+        }
+        catch
+        {
+            return Results.Problem("File was not saved", statusCode: 500);
+        }
+        return Results.Ok("Scan result successfully saved on disk!");
     }
 }
