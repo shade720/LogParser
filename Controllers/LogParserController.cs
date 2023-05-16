@@ -50,4 +50,25 @@ public class LogParserController : ControllerBase
     {
         return scanData.ScanInfo.ErrorCount;
     }
+
+    // "api/errors/{index}" GET
+    [HttpGet("errors/{index}")]
+    public IResult GetErrorById(int index, [FromBody] ScanData scanData)
+    {
+        try
+        {
+            var scannedFileInfoById = scanData.Files
+                .Where(file => !file.HasNoErrors)
+                .ToArray()[index];
+            return Results.Ok(new FileErrorInfo
+            {
+                Filename = scannedFileInfoById.FileName,
+                ErrorDescriptions = scannedFileInfoById.Errors.Select(err => err.ErrorText)
+            });
+        }
+        catch (IndexOutOfRangeException e)
+        {
+            return Results.BadRequest(e.Message);
+        }
+    }
 }
