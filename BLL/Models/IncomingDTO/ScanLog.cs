@@ -2,7 +2,7 @@
 
 namespace LogParser.BLL.Models.IncomingDTO;
 
-public class ScanData
+public class ScanLog
 {
     [JsonPropertyName("scan")]
     public ScanInfo ScanInfo { get; set; }

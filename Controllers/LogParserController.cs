@@ -1,5 +1,6 @@
 ﻿using System.Text;
 using System.Text.Json;
+using LogParser.BLL;
 using LogParser.BLL.Models.IncomingDTO;
 using LogParser.BLL.Models.OutgoingDTO;
 using Microsoft.AspNetCore.Mvc;
@@ -10,118 +11,91 @@ namespace LogParser.Controllers;
 [ApiController]
 public class LogParserController : ControllerBase
 {
+    private readonly LogFilter _logFilter;
+    private readonly LogSaver _logSaver;
+    private readonly ServiceInfoProvider _serviceInfoProvider;
+
+    public LogParserController(LogFilter logFilter, LogSaver logSaver, ServiceInfoProvider serviceInfoProvider)
+    {
+        _logFilter = logFilter;
+        _logSaver = logSaver;
+        _serviceInfoProvider = serviceInfoProvider;
+    }
+
     // "api/allData" GET
     [HttpGet ("allData")]
-    public ScanData GetAllData([FromBody] ScanData scanData)
+    public ScanLog GetAllData([FromBody] ScanLog scanLog)
     {
-        return scanData;
+        return _logFilter.NoFilter(scanLog);
     }
 
     // "api/scan" GET
     [HttpGet("scan")]
-    public ScanInfo GetScanInfo([FromBody] ScanData scanData)
+    public ScanInfo GetScanInfo([FromBody] ScanLog scanLog)
     {
-        return scanData.ScanInfo;
+        return _logFilter.FilterScanInfo(scanLog);
     }
 
     // "api/filenames?correct={value}" GET
     [HttpGet("filenames")]
-    public IEnumerable<ScannedFileInfo> GetScanInfo(
-        [FromQuery (Name = "correct")] bool isCorrect, 
-        [FromBody] ScanData scanData)
+    public IEnumerable<ScannedFileInfo> GetScanInfo([FromQuery (Name = "correct")] bool isCorrect, [FromBody] ScanLog scanLog)
     {
-        return scanData.Files.Where(file => file.HasNoErrors == isCorrect);
+        return _logFilter.FilterScanInfoByСorrectness(isCorrect, scanLog);
     }
 
     // "api/errors" GET
     [HttpGet("errors")]
-    public IEnumerable<FileErrorInfo> GetErrors([FromBody] ScanData scanData)
+    public IEnumerable<FileErrorInfo> GetErrors([FromBody] ScanLog scanLog)
     {
-        return scanData.Files
-            .Where(file => !file.HasNoErrors)
-            .Select(file => new FileErrorInfo
-            {
-                Filename = file.FileName,
-                ErrorDescriptions = file.Errors.Select(err => err.ErrorText)
-            });
+        return _logFilter.FilterErrors(scanLog);
     }
 
     // "api/errors/count" GET
     [HttpGet("errors/count")]
-    public int GetErrorsCount([FromBody] ScanData scanData)
+    public int GetErrorsCount([FromBody] ScanLog scanLog)
     {
-        return scanData.ScanInfo.ErrorCount;
+        return _logFilter.FilterErrorsCount(scanLog);
     }
 
     // "api/errors/{index}" GET
     [HttpGet("errors/{index}")]
-    public IResult GetErrorById(int index, [FromBody] ScanData scanData)
+    public IResult GetErrorById(int index, [FromBody] ScanLog scanLog)
     {
         try
         {
-            var scannedFileInfoById = scanData.Files
-                .Where(file => !file.HasNoErrors)
-                .ToArray()[index];
-            return Results.Ok(new FileErrorInfo
-            {
-                Filename = scannedFileInfoById.FileName,
-                ErrorDescriptions = scannedFileInfoById.Errors.Select(err => err.ErrorText)
-            });
+            var fileErrorInfo = _logFilter.FilterErrorsByFileIndex(index, scanLog);
+            return Results.Ok(fileErrorInfo);
         }
-        catch (IndexOutOfRangeException e)
+        catch (IndexOutOfRangeException)
         {
-            return Results.BadRequest(e.Message);
+            return Results.BadRequest("File with such an index does not exist");
         }
     }
 
     // "api/query/check" GET
     [HttpGet("query/check")]
-    public QueriesInfo GetQueryCheck([FromBody] ScanData scanData)
+    public QueriesInfo GetQueryCheck([FromBody] ScanLog scanLog)
     {
-        var queriesGroupedByScanResult = scanData.Files
-            .Where(f => f.FileName.ToLower().StartsWith("query_"))
-            .GroupBy(f => f.HasNoErrors)
-            .ToDictionary(g => g.Key, g => g.ToList());
-
-        if (!queriesGroupedByScanResult.ContainsKey(false))
-            queriesGroupedByScanResult[false] = new List<ScannedFileInfo>();
-        if (!queriesGroupedByScanResult.ContainsKey(true))
-            queriesGroupedByScanResult[true] = new List<ScannedFileInfo>();
-
-        return new QueriesInfo
-        {
-            TotalQueries = queriesGroupedByScanResult[true].Count + queriesGroupedByScanResult[false].Count,
-            CorrectQueries = queriesGroupedByScanResult[true].Count,
-            ErrorQueries = queriesGroupedByScanResult[false].Count,
-            ErrorFiles = queriesGroupedByScanResult[false].Select(x => x.FileName)
-        };
+        return _logFilter.FilterQueries(scanLog);
     }
 
     // "api/newErrors" POST
     [HttpPost("newErrors")]
     public async Task<IResult> PostNewErrors()
     {
-        string scanDataJson;
         try
         {
-            using (var reader = new StreamReader(Request.Body, Encoding.UTF8))
-            {
-                scanDataJson = await reader.ReadToEndAsync();
-            }
-            JsonSerializer.Deserialize<ScanData>(scanDataJson);
+            using var reader = new StreamReader(Request.Body, Encoding.UTF8);
+            var scanDataJson = await reader.ReadToEndAsync();
+            await _logSaver.SaveScanLogJson(scanDataJson);
         }
-        catch
+        catch (JsonException exception)
         {
-            return Results.BadRequest("The JSON value could not be converted");
+            return Results.BadRequest(exception.Message);
         }
-        try
+        catch (Exception exception)
         {
-            var saveFileName = Path.ChangeExtension(DateTime.Now.ToString("dd-MM-yyyy_hh-mm-ss"), ".json");
-            await System.IO.File.WriteAllTextAsync(saveFileName, JsonSerializer.Serialize(scanDataJson));
-        }
-        catch
-        {
-            return Results.Problem("File was not saved", statusCode: 500);
+            return Results.Problem(exception.Message, statusCode: 500);
         }
         return Results.Ok("Scan result successfully saved on disk!");
     }
@@ -130,6 +104,6 @@ public class LogParserController : ControllerBase
     [HttpGet("service/serviceInfo")]
     public ServiceInfo GetServiceInfo()
     {
-        return new ServiceInfo();
+        return _serviceInfoProvider.CurrentServiceInfo;
     }
 }
