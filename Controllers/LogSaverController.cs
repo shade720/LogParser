@@ -23,13 +23,13 @@ public class LogSaverController : ControllerBase
             var scanDataJson = await reader.ReadToEndAsync();
             await _logSaver.SaveScanLogJson(scanDataJson);
         }
-        catch (JsonException exception)
+        catch (JsonException)
         {
-            return Results.BadRequest(exception.Message);
+            return Results.BadRequest("The JSON value could not be converted");
         }
-        catch (Exception exception)
+        catch (IOException)
         {
-            return Results.Problem(exception.Message, statusCode: 500);
+            return Results.Problem("File was not saved", statusCode: 500);
         }
         return Results.Ok("Scan result successfully saved on disk!");
     }

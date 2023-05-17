@@ -58,7 +58,7 @@ public class LogFilterController : ControllerBase
         }
         catch (IndexOutOfRangeException)
         {
-            return Results.BadRequest("File with such an index does not exist");
+            return Results.NotFound("File with such an index does not exist");
         }
     }
 
