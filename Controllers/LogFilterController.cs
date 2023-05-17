@@ -7,10 +7,10 @@ namespace LogParser.Controllers;
 
 [Route("api")]
 [ApiController]
-public class LogParserController : ControllerBase
+public class LogFilterController : ControllerBase
 {
     private readonly LogFilter _logFilter;
-    public LogParserController(LogFilter logFilter) => _logFilter = logFilter;
+    public LogFilterController(LogFilter logFilter) => _logFilter = logFilter;
 
     // "api/allData" GET
     [HttpGet ("allData")]
