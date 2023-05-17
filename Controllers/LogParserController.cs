@@ -30,7 +30,7 @@ public class LogParserController : ControllerBase
     [HttpGet("filenames")]
     public IEnumerable<ScannedFileInfo> GetScanInfo([FromQuery (Name = "correct")] bool isCorrect, [FromBody] ScanLog scanLog)
     {
-        return _logFilter.FilterScanInfoByСorrectness(isCorrect, scanLog);
+        return _logFilter.FilterFilesByСorrectness(isCorrect, scanLog);
     }
 
     // "api/errors" GET
