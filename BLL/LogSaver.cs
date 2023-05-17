@@ -18,19 +18,8 @@ public class LogSaver
     /// Содержание: "File was not saved" </exception>
     public async Task SaveScanLogJson(string scanLogJson)
     {
-        try
-        {
-            JsonSerializer.Deserialize<ScanLog>(scanLogJson);
-            var saveFileName = Path.ChangeExtension(DateTime.Now.ToString(SaveFileNameFormat), ".json");
-            await File.WriteAllTextAsync(saveFileName, scanLogJson);
-        }
-        catch (JsonException)
-        {
-            throw new JsonException("The JSON value could not be converted");
-        }
-        catch (Exception)
-        {
-            throw new FileLoadException("File was not saved");
-        }
+        JsonSerializer.Deserialize<ScanLog>(scanLogJson);
+        var saveFileName = Path.ChangeExtension(DateTime.Now.ToString(SaveFileNameFormat), ".json");
+        await File.WriteAllTextAsync(saveFileName, scanLogJson);
     }
 }

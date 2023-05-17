@@ -4,7 +4,7 @@ using Microsoft.AspNetCore.Mvc;
 
 namespace LogParser.Controllers;
 
-[Route("api")]
+[Route("api/service")]
 [ApiController]
 public class ServiceController : ControllerBase
 {
@@ -13,7 +13,7 @@ public class ServiceController : ControllerBase
     public ServiceController(ServiceInfoProvider serviceInfoProvider) => _serviceInfoProvider = serviceInfoProvider;
 
     // "api/service/serviceInfo" GET
-    [HttpGet("service/serviceInfo")]
+    [HttpGet("serviceInfo")]
     public ServiceInfo GetServiceInfo()
     {
         return _serviceInfoProvider.CurrentServiceInfo;
